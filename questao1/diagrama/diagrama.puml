@@ -1,0 +1,225 @@
+@startuml
+title Questao 1 - Provisionamento Multinuvem
+skinparam classAttributeIconSize 0
+class AWSArmazenamento <<ConcreteProduct>> {
+  public AWSArmazenamento()
+  public BigDecimal getCustoPorGB()
+}
+class AWSFactory <<ConcreteFactory>> {
+  public String getNome()
+  public BigDecimal getCustoHoraMaquina()
+  public BigDecimal getCustoPorGB()
+  public BigDecimal getCustoMensalFila()
+  public MaquinaVirtual criarMaquinaVirtual()
+  public Armazenamento criarArmazenamento()
+  public FilaMensagens criarFilaMensagens()
+  static final BigDecimal CUSTO_HORA_VM
+  static final BigDecimal CUSTO_GB
+  static final BigDecimal CUSTO_FILA
+}
+class AWSFilaMensagens <<ConcreteProduct>> {
+  public AWSFilaMensagens()
+  public BigDecimal getCustoMensal()
+}
+class AWSMaquinaVirtual <<ConcreteProduct>> {
+  public AWSMaquinaVirtual()
+  public BigDecimal getCustoHora()
+}
+interface Armazenamento <<AbstractProduct>> {
+  BigDecimal getCustoPorGB()
+}
+class Auditoria <<Singleton>> {
+  private Auditoria()
+  public static Auditoria getInstancia()
+  public synchronized void registrar(Solicitacao solicitacao, boolean aceito, String motivo)
+  public synchronized List<String> getRegistros()
+  private final List<String> registros
+}
+class AzureArmazenamento <<ConcreteProduct>> {
+  public AzureArmazenamento()
+  public BigDecimal getCustoPorGB()
+}
+class AzureFactory <<ConcreteFactory>> {
+  public String getNome()
+  public BigDecimal getCustoHoraMaquina()
+  public BigDecimal getCustoPorGB()
+  public BigDecimal getCustoMensalFila()
+  public MaquinaVirtual criarMaquinaVirtual()
+  public Armazenamento criarArmazenamento()
+  public FilaMensagens criarFilaMensagens()
+  static final BigDecimal CUSTO_HORA_VM
+  static final BigDecimal CUSTO_GB
+  static final BigDecimal CUSTO_FILA
+}
+class AzureFilaMensagens <<ConcreteProduct>> {
+  public AzureFilaMensagens()
+  public BigDecimal getCustoMensal()
+}
+class AzureMaquinaVirtual <<ConcreteProduct>> {
+  public AzureMaquinaVirtual()
+  public BigDecimal getCustoHora()
+}
+class Configuracao <<Singleton>> {
+  private Configuracao()
+  public static Configuracao getInstancia()
+  public String getRegiaoPadrao()
+  public BigDecimal getOrcamentoMensalMaximo()
+  private final String regiaoPadrao
+  private final BigDecimal orcamentoMensalMaximo
+}
+interface FilaMensagens <<AbstractProduct>> {
+  BigDecimal getCustoMensal()
+}
+class Main <<Support>> {
+  public static void main(String[] args)
+}
+interface MaquinaVirtual <<AbstractProduct>> {
+  BigDecimal getCustoHora()
+}
+interface ProvedorFactory <<AbstractFactory>> {
+  String getNome()
+  BigDecimal getCustoHoraMaquina()
+  BigDecimal getCustoPorGB()
+  BigDecimal getCustoMensalFila()
+  MaquinaVirtual criarMaquinaVirtual()
+  Armazenamento criarArmazenamento()
+  FilaMensagens criarFilaMensagens()
+}
+class Provisionador <<Client>> {
+  public BigDecimal estimarCusto(Solicitacao s, ProvedorFactory fabrica)
+  public Resultado provisionar(Solicitacao s, ProvedorFactory fabrica)
+  private Resultado finalizar(Solicitacao s, BigDecimal custo, boolean aceito, String motivo, List<Recurso> recursos)
+  private static final BigDecimal HORAS_MES
+}
+interface Recurso <<Support>> {
+  String getIdentificador()
+  String getProvedor()
+}
+abstract class RecursoBase <<Support>> {
+  protected RecursoBase(String prefixo, String provedor)
+  public final String getIdentificador()
+  public final String getProvedor()
+  private static final ConcurrentMap<String, AtomicLong> SEQUENCIAS
+  private final String identificador
+  private final String provedor
+}
+class Resultado <<ValueObject>> {
+  Resultado(Solicitacao solicitacao, String regiao, BigDecimal custo, boolean aceito, String motivo, List<Recurso> recursos)
+  public boolean isAceito()
+  public BigDecimal getCusto()
+  public List<Recurso> getRecursos()
+  public String getRegiao()
+  public String getMotivo()
+  public String toString()
+  private final String ambiente
+  private final String provedor
+  private final String regiao
+  private final BigDecimal custo
+  private final boolean aceito
+  private final String motivo
+  private final List<Recurso> recursos
+}
+class Solicitacao <<ValueObject>> {
+  public Solicitacao(String nome, String provedor, int quantidadeMaquinas, long gb)
+  public String getNome()
+  public String getProvedor()
+  public int getQuantidadeMaquinas()
+  public long getGb()
+  private final String nome
+  private final String provedor
+  private final int quantidadeMaquinas
+  private final long gb
+}
+class "Configuracao.Holder" as ConfigHolder <<InitializationHolder>> {
+  - {static} INSTANCIA : Configuracao
+}
+class "Auditoria.Holder" as AuditHolder <<InitializationHolder>> {
+  - {static} INSTANCIA : Auditoria
+}
+class Testes <<TestRunner>> {
+  + {static} main(args : String[]) : void
+  - {static} verificar(condicao : boolean, mensagem : String) : void
+  - {static} numero(recurso : Recurso, prefixo : String) : long
+}
+ProvedorFactory <|.. AWSFactory
+MaquinaVirtual <|.. AWSMaquinaVirtual
+RecursoBase <|-- AWSMaquinaVirtual
+AWSFactory ..> AWSMaquinaVirtual : cria
+AWSMaquinaVirtual ..> AWSFactory : tarifa
+Armazenamento <|.. AWSArmazenamento
+RecursoBase <|-- AWSArmazenamento
+AWSFactory ..> AWSArmazenamento : cria
+AWSArmazenamento ..> AWSFactory : tarifa
+FilaMensagens <|.. AWSFilaMensagens
+RecursoBase <|-- AWSFilaMensagens
+AWSFactory ..> AWSFilaMensagens : cria
+AWSFilaMensagens ..> AWSFactory : tarifa
+ProvedorFactory <|.. AzureFactory
+MaquinaVirtual <|.. AzureMaquinaVirtual
+RecursoBase <|-- AzureMaquinaVirtual
+AzureFactory ..> AzureMaquinaVirtual : cria
+AzureMaquinaVirtual ..> AzureFactory : tarifa
+Armazenamento <|.. AzureArmazenamento
+RecursoBase <|-- AzureArmazenamento
+AzureFactory ..> AzureArmazenamento : cria
+AzureArmazenamento ..> AzureFactory : tarifa
+FilaMensagens <|.. AzureFilaMensagens
+RecursoBase <|-- AzureFilaMensagens
+AzureFactory ..> AzureFilaMensagens : cria
+AzureFilaMensagens ..> AzureFactory : tarifa
+Recurso <|-- MaquinaVirtual
+Recurso <|-- Armazenamento
+Recurso <|-- FilaMensagens
+Recurso <|.. RecursoBase
+Configuracao +-- ConfigHolder
+Auditoria +-- AuditHolder
+RecursoBase *-- "1" "ConcurrentMap<String, AtomicLong>" : sequencias por prefixo
+Auditoria *-- "0..*" String : registros sincronizados
+Resultado o-- "0..*" Recurso : mesma familia
+Resultado ..> Solicitacao
+Provisionador ..> ProvedorFactory : recebe uma fabrica
+Provisionador ..> Solicitacao
+Provisionador ..> Resultado : cria e imprime
+Provisionador ..> Auditoria : um registro final
+Provisionador ..> Configuracao : regiao e limite
+Auditoria ..> Solicitacao
+Main ..> Configuracao
+Main ..> Auditoria
+Main ..> Provisionador
+Main ..> Solicitacao
+Main ..> Resultado
+Main ..> AWSFactory : escolhe provedor
+Main ..> AzureFactory : escolhe provedor
+Main ..> "ExecutorService" : duas threads
+Main ..> "CountDownLatch" : libera inicio simultaneo
+Testes ..> Configuracao
+Testes ..> Auditoria
+Testes ..> Provisionador
+Testes ..> Solicitacao
+Testes ..> Resultado
+Testes ..> AWSFactory
+Testes ..> AzureFactory
+Testes ..> Recurso
+Testes ..> MaquinaVirtual
+Testes ..> Armazenamento
+Testes ..> FilaMensagens
+note right of Provisionador
+  Custo = quantidadeVM x tarifaHora x 730
+        + GB x tarifaGB + tarifaFila.
+  Valida orcamento antes de criar recursos.
+  Nao conhece produtos concretos.
+end note
+note right of Configuracao
+  Holder: inicializacao unica e segura pela JVM.
+  Le config.properties uma vez: regiao e orcamento.
+end note
+note right of RecursoBase
+  Prefixos: i-, s3://, sqs-, vm-, blob://, sb-.
+  Sequencia atomica independente por tipo/provedor.
+end note
+note right of Auditoria
+  Um registro por provisionamento.
+  Data/hora, ambiente, provedor, resultado e motivo.
+  Inclusao sincronizada e consulta por copia imutavel.
+end note
+@enduml
