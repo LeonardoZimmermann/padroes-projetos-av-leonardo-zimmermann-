@@ -1,0 +1,271 @@
+@startuml
+title Questao 2 - Casa de Leiloes Online
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+class AcertoVendedor <<Client>> {
+  private final Venda venda
+  public AcertoVendedor(Venda venda)
+  public BigDecimal getLiquido()
+  public String gerar()
+  public void imprimir()
+}
+class AuditorLances <<ConcreteObserver>> {
+  private final List<String> registros
+  public void atualizar(Lote lote, Lance lance)
+  public List<String> getRegistros()
+}
+class CertificadoAutenticidade <<ConcreteDecorator>> {
+  public CertificadoAutenticidade(Fatura fatura)
+  protected ItemFatura criarItem()
+}
+class ComissaoArte <<ConcreteStrategy>> {
+  public BigDecimal calcular(BigDecimal valorVenda)
+}
+class ComissaoEletronicos <<ConcreteStrategy>> {
+  public BigDecimal calcular(BigDecimal valorVenda)
+}
+class ComissaoImoveis <<ConcreteStrategy>> {
+  public BigDecimal calcular(BigDecimal valorVenda)
+}
+class ComissaoVeiculos <<ConcreteStrategy>> {
+  public BigDecimal calcular(BigDecimal valorVenda)
+}
+class Dinheiro <<Utility>> {
+  private Dinheiro()
+  public static BigDecimal validar(BigDecimal valor)
+  public static BigDecimal arredondar(BigDecimal valor)
+  public static String formatar(BigDecimal valor)
+}
+class EmbalagemEspecial <<ConcreteDecorator>> {
+  public EmbalagemEspecial(Fatura fatura)
+  protected ItemFatura criarItem()
+}
+class EntregaExpressa <<ConcreteDecorator>> {
+  public EntregaExpressa(Fatura fatura)
+  protected ItemFatura criarItem()
+}
+enum EstadoLote <<State>> {
+  ABERTO
+  VENDIDO
+  NAO_VENDIDO
+}
+interface Fatura <<Component>> {
+  Venda getVenda()
+  List<ItemFatura> getItens()
+  BigDecimal getTotal()
+}
+class FaturaVenda <<ConcreteComponent>> {
+  private final Venda venda
+  public FaturaVenda(Venda venda)
+  public Venda getVenda()
+  public List<ItemFatura> getItens()
+  public BigDecimal getTotal()
+}
+class ImpressorFatura <<Client>> {
+  public String gerar(Fatura fatura)
+  public void imprimir(Fatura fatura)
+}
+class ItemFatura <<ValueObject>> {
+  private final String descricao
+  private final BigDecimal custo
+  public ItemFatura(String descricao, BigDecimal custo)
+  public String getDescricao()
+  public BigDecimal getCusto()
+}
+class Lance <<ValueObject>> {
+  private final Licitante participante
+  private final BigDecimal valor
+  private final Instant dataHora
+  public Lance(Licitante participante, BigDecimal valor)
+  public Licitante getParticipante()
+  public BigDecimal getValor()
+  public Instant getDataHora()
+}
+interface Licitante <<ObserverContract>> {
+  String getNome()
+}
+class Lote <<ConcreteSubject_Context>> {
+  private final String nome
+  private final String categoria
+  private final BigDecimal precoInicial
+  private final BigDecimal precoReserva
+  private final List<ObservadorLote> observadores
+  private final List<Lance> lances
+  private RegraComissao regraComissao
+  private EstadoLote estado
+  private Venda venda
+  public Lote(String nome, String categoria, BigDecimal precoInicial, BigDecimal precoReserva, RegraComissao regraComissao)
+  public void acompanhar(ObservadorLote observador)
+  public void deixarDeAcompanhar(ObservadorLote observador)
+  public boolean receberLance(Licitante participante, BigDecimal valor)
+  public void trocarRegraComissao(RegraComissao novaRegra)
+  public Optional<Venda> encerrar()
+  public String getNome()
+  public String getCategoria()
+  public BigDecimal getPrecoInicial()
+  public BigDecimal getPrecoReserva()
+  public BigDecimal getLanceAtual()
+  public List<Lance> getLances()
+  public EstadoLote getEstado()
+}
+class Main <<CompositionRoot>> {
+  public static void main(String[] args)
+}
+interface ObservadorLote <<Observer>> {
+  void atualizar(Lote lote, Lance lance)
+}
+interface ObservavelLote <<Subject>> {
+  void acompanhar(ObservadorLote observador)
+  void deixarDeAcompanhar(ObservadorLote observador)
+}
+class PainelLeiloeiro <<ConcreteObserver>> {
+  private final Map<String, String> resumos
+  public void atualizar(Lote lote, Lance lance)
+  public Map<String, String> getResumos()
+}
+class Participante <<ConcreteObserver>> {
+  private final String nome
+  private final List<String> notificacoes
+  public Participante(String nome)
+  public String getNome()
+  public boolean darLance(Lote lote, BigDecimal valor)
+  public void atualizar(Lote lote, Lance lance)
+  public List<String> getNotificacoes()
+}
+interface RegraComissao <<Strategy>> {
+  BigDecimal calcular(BigDecimal valorVenda)
+}
+class SeguroTransporte <<ConcreteDecorator>> {
+  public SeguroTransporte(Fatura fatura)
+  protected ItemFatura criarItem()
+}
+abstract class ServicoAdicional <<Decorator>> {
+  private final Fatura fatura
+  protected ServicoAdicional(Fatura fatura)
+  public final Venda getVenda()
+  protected abstract ItemFatura criarItem()
+  public final List<ItemFatura> getItens()
+  public final BigDecimal getTotal()
+}
+class Venda <<ValueObject>> {
+  private final String nomeLote
+  private final Licitante comprador
+  private final BigDecimal valor
+  private final BigDecimal comissao
+  Venda(String nomeLote, Licitante comprador, BigDecimal valor, BigDecimal comissao)
+  public String getNomeLote()
+  public Licitante getComprador()
+  public BigDecimal getValor()
+  public BigDecimal getComissao()
+}
+class Testes <<TestRunner>> {
+  + {static} main(args : String[]) : void
+  - {static} verificar(condicao : boolean, mensagem : String) : void
+  - {static} valor(atual : BigDecimal, esperado : String, mensagem : String) : void
+  - {static} falha(acao : Runnable, mensagem : String) : void
+  - {static} lote(nome : String, inicial : String, reserva : String, regra : RegraComissao) : Lote
+}
+ObservavelLote <|.. Lote
+ObservadorLote <|-- Licitante
+Licitante <|.. Participante
+ObservadorLote <|.. PainelLeiloeiro
+ObservadorLote <|.. AuditorLances
+Lote o-- "0..*" ObservadorLote : notifica, exceto autor
+Lote *-- "0..*" Lance : aceitos
+Lance --> "1" Licitante : autor
+Lote --> "1" RegraComissao : substituivel em execucao
+Lote --> "1" EstadoLote
+Lote --> "0..1" Venda : cria ao vender
+Venda --> "1" Licitante : comprador
+Participante ..> Lote : darLance()
+ObservadorLote ..> Lote : recebe evento
+ObservadorLote ..> Lance
+PainelLeiloeiro ..> Lote : maior lance e contagem
+AuditorLances ..> Lance : data/hora, autor e valor
+Fatura <|.. FaturaVenda
+Fatura <|.. ServicoAdicional
+ServicoAdicional o-- "1" Fatura : envolve
+FaturaVenda --> "1" Venda
+Fatura ..> Venda
+Fatura ..> ItemFatura
+ServicoAdicional ..> ItemFatura : acrescenta
+ImpressorFatura ..> Fatura : imprime qualquer composicao
+ImpressorFatura ..> ItemFatura
+AcertoVendedor --> "1" Venda : valor - comissao
+RegraComissao <|.. ComissaoArte
+RegraComissao <|.. ComissaoVeiculos
+RegraComissao <|.. ComissaoImoveis
+RegraComissao <|.. ComissaoEletronicos
+ServicoAdicional <|-- SeguroTransporte
+ServicoAdicional <|-- CertificadoAutenticidade
+ServicoAdicional <|-- EmbalagemEspecial
+ServicoAdicional <|-- EntregaExpressa
+AcertoVendedor ..> Dinheiro
+AuditorLances ..> Dinheiro
+ComissaoArte ..> Dinheiro
+ComissaoEletronicos ..> Dinheiro
+ComissaoImoveis ..> Dinheiro
+ComissaoVeiculos ..> Dinheiro
+ImpressorFatura ..> Dinheiro
+ItemFatura ..> Dinheiro
+Lance ..> Dinheiro
+Lote ..> Dinheiro
+PainelLeiloeiro ..> Dinheiro
+Participante ..> Dinheiro
+SeguroTransporte ..> Dinheiro
+Venda ..> Dinheiro
+Main ..> Lote
+Main ..> Participante
+Main ..> PainelLeiloeiro
+Main ..> AuditorLances
+Main ..> ComissaoArte
+Main ..> ComissaoVeiculos
+Main ..> ComissaoEletronicos
+Main ..> Venda
+Main ..> Fatura
+Main ..> FaturaVenda
+Main ..> SeguroTransporte
+Main ..> CertificadoAutenticidade
+Main ..> EmbalagemEspecial
+Main ..> EntregaExpressa
+Main ..> ImpressorFatura
+Main ..> AcertoVendedor
+Testes ..> Lote
+Testes ..> ObservadorLote
+Testes ..> Participante
+Testes ..> PainelLeiloeiro
+Testes ..> AuditorLances
+Testes ..> RegraComissao
+Testes ..> ComissaoArte
+Testes ..> ComissaoVeiculos
+Testes ..> ComissaoImoveis
+Testes ..> ComissaoEletronicos
+Testes ..> Fatura
+Testes ..> FaturaVenda
+Testes ..> SeguroTransporte
+Testes ..> CertificadoAutenticidade
+Testes ..> EmbalagemEspecial
+Testes ..> EntregaExpressa
+Testes ..> ImpressorFatura
+Testes ..> AcertoVendedor
+Testes ..> Dinheiro
+Testes ..> Venda
+Testes ..> Lance
+Testes ..> EstadoLote
+note right of Lote
+  Observer: conhece apenas os contratos dos interessados.
+  Lance aceito >= lanceAtual x 1,05.
+  Encerramento vende somente com lance >= reserva.
+  Strategy: comissao capturada no encerramento.
+end note
+note right of ServicoAdicional
+  Decorator: envolve outra Fatura.
+  Preserva ordem e permite repeticoes.
+  Seguro sempre usa o valor original de venda.
+end note
+note right of RegraComissao
+  Arte: 20%. Veiculos: 8%, teto 5000.
+  Imoveis: 3% + 1500. Eletronicos: 12%, minimo 50.
+  Nenhuma selecao por categoria em if/switch.
+end note
+@enduml
